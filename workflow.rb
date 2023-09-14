@@ -16,8 +16,7 @@ module PredIG
 
 
   input :peptides, :array, "Array of peptides", nil, :required => true
-  input :tap_sizes, :array, "Peptide size", (8..16).to_a
-  task :tapmat_pred_fsa => :tsv do |peptides,sizes|
+  task :tapmat_pred_fsa => :tsv do |peptides|
 
     peptides = Open.read(peptides).split("\n") if String ===  peptides
 
@@ -30,6 +29,8 @@ module PredIG
       EOF
     end
 
+    sizes = peptides.collect{|p| p.length }.uniq.sort
+
     Open.write file('fasta'), fasta
     
     scores = TSV.setup({}, "Peptide~TAP#:type=:single#:cast=:to_f")
@@ -37,10 +38,10 @@ module PredIG
       scores.merge!(Immunomics.tapmat_pred_fsa(file('fasta'), size))
     end
 
-    scores
+    scores.subset(peptides)
   end
 
-  input :peptides, :array, "Array of peptides", nil, :required => true
+  input :peptides, :array, "List of peptides, one per line, no header", nil, :required => true
   task :physico_chemical => :tsv do |peptides|
 
     peptides = Open.read(peptides).split("\n") if String ===  peptides
@@ -65,7 +66,8 @@ rbbt.require("seqinr")
     TSV.open(input.sub('.csv','_pch.csv'), :sep => ',', :header_hash => '', :type => :list)
   end
 
-  input :input, :text, "Two columns with Peptide and allele"
+  # ToDo: Accept the peptide and allele columns on other order
+  input :input, :text, "Two columns with peptide and allele"
   task :mhcFlurry => :tsv do |input|
     str = 'allele,peptide' << "\n"
 
@@ -112,23 +114,23 @@ rbbt.require("seqinr")
   end
 
   dep :prepare_input_files
-  dep :tapmat_pred_fsa do |jobname,options,dependencies|
+  dep :tapmat_pred_fsa, :peptides => :placeholder do |jobname,options,dependencies|
     input_file_job = dependencies.flatten.first
     {:inputs => options.merge(:peptides => input_file_job.file('peptides'))}
   end
-  dep :physico_chemical do |jobname,options,dependencies|
+  dep :physico_chemical, :peptides => :placeholder do |jobname,options,dependencies|
     input_file_job = dependencies.flatten.first
     {:inputs => options.merge(:peptides => input_file_job.file('peptides'))}
   end
-  dep :mhcFlurry do |jobname,options,dependencies|
+  dep :mhcFlurry, :input => :placeholder do |jobname,options,dependencies|
     input_file_job = dependencies.flatten.first
     {:inputs => options.merge(:input => input_file_job.file('peptide_alleles'))}
   end
-  dep NOAH, :predict do |jobname,options,dependencies|
+  dep NOAH, :predict, :input => :placeholder do |jobname,options,dependencies|
     input_file_job = dependencies.flatten.first
     {:inputs => options.merge(:input => input_file_job.file('peptide_alleles'))}
   end
-  dep NetCleave, :predict_uniprot do |jobname,options,dependencies|
+  dep NetCleave, :predict_uniprot, :uniprot_csv => :placeholder do |jobname,options,dependencies|
     input_file_job = dependencies.flatten.first
     {:inputs => options.merge(:uniprot_csv => input_file_job.file('peptide_uniprot'))}
   end
@@ -185,7 +187,6 @@ rbbt.require("seqinr")
     output.add_field "Allele" do |k|
       k.split("_").last
     end
-
 
     output.reorder :key, (["Peptide", "Allele", "PredIG"] + output.fields).uniq
   end
