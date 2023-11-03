@@ -1,0 +1,51 @@
+:sass
+  table 
+    td, th
+      border: 1px solid
+      padding: 2px 5px
+    
+:markdown
+
+  # Methods
+
+  PredIG is a Predictor of CD8+ T-cell epitope ImmunoGenicity trained on the
+  largest T-cell assay dataset including reactivity (cytokine release assay) and
+  binding (MHC-tetramer) experiments. 
+
+  As data points, the model uses individual pairs of epitope and presenting HLA-I
+  allele, labelled as immunogenically positive or negative according to its
+  ground truth experimental source. The presenting HLA-I allele was refined from
+  different HLA-ontologies and prediction sources. 
+
+  Epitope and HLA-I allele are used to build a feature space using bioinformatic
+  predictors that comprises 7 antigenic predictions covering antigen processing,
+  transport and presentation and 7 physicochemical characteristics describing the
+  entire epitope and its central residues specifically.
+
+  PredIG takes advantage of a feature space that comprehensively describes the
+  epitope pathway to T-cell recognition and uses XGBoost and explainable AI
+  techniques to deliver interpretable predictions. A careful assessment of the
+  imbalanced nature of T-cell assay data (ie much more expected negatives than
+  positive cases) is built in the algorithm to precisely adapt to cancer and
+  pathogen data. 
+
+  Briefly, PredIG score consists of a probability from 0 to 1, being 1 the
+  maximum likelihood for epitope immunogenicity. This score can be used to rank
+  candidates for prioritization approaches or to classify them using adaptable
+  thresholds. 
+
+
+  PredIG uses XGBoost tunning to optimize its performance and adapt to different
+  data sources. The main goal was to optimize the model to foster the scoring of
+  epitopes in extreme class imbalance conditions where few immunogenic candidates
+  are expected among many immune silent epitopes. Thus, we provide different
+  models for the user to select the expected class imbalance in their target
+  data.
+
+  | Model Name   | Class Imbalance | SPW Value | Target Data | 
+  | ------------ | --------------- | --------- | ----------- | 
+  | PredIG-SPW-X | X               | spw-x     | Pathogen    | 
+  | PredIG-SPW-Y | Y               | spw-y     | Cancer      | 
+
+  Please refer to the publication for an in-depth description of the class
+  imbalance effects in PredIG predictions.

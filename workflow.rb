@@ -191,6 +191,7 @@ rbbt.require("seqinr")
     output.reorder :key, (["Peptide", "Allele", "PredIG"] + output.fields).uniq
   end
 
+  export :predig, :mhcFlurry, :tapmat_pred_fsa, :physico_chemical
 
 
 end

@@ -1,5 +1,8 @@
 PredIG=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *.txt *.conf" {
  workflow.rb
+ README.md
+ Methods.md
+
  bin=bin filter="*"{
  }
  lib=lib {
@@ -16,5 +19,13 @@ PredIG=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *.t
     predig_spwindep_calc.R
    }
    }
+ }
+ www=www{
+  views=views{
+   main.haml
+   help.haml
+   main=main{
+   }
+  }
  }
 }
